@@ -1,6 +1,7 @@
 const UserModel = require('../models/User');
 const AnswerModel = require('../models/Answers');
-const SettingModel = require('../models/Settings')
+const SettingModel = require('../models/Settings');
+const QuestionModel = require('../models/Questions');
 
 // --------------------------------------------------------------------------------------------------------------
 
