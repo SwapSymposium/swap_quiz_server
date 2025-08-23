@@ -16,7 +16,7 @@ const loginUser = async (req, res) => {
         // console.log(userExists)
         if (!userExists) { return res.status(401).json({ message: 'User not found.' }) };
         if (password !== userExists.password) { return res.status(401).json({ message: 'Password is Invalid.' }) };
-        const token = jwt.sign({ id: userExists._id, teamId: userExists.teamId }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' })
+        const token = jwt.sign({ id: userExists._id, teamId: userExists.teamId }, process.env.JWT_SECRET_KEY, { expiresIn: '1.5h' })
         // console.log(token)
         return res.status(200).json({ status: 200, token, user: { event: userExists.event, role: userExists.role } });
     } catch (error) {

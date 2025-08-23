@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/User')
 
+// --------------------------------------------------------------------------------------------------------------
+
 const verifyToken = async (req, res, next) => {
 
     const { teamId } = req.body;
@@ -17,11 +19,11 @@ const verifyToken = async (req, res, next) => {
         const userExists = await UserModel.findById(decoded.id)
         // console.log(userExists)
         if (!userExists) {
-            console.log('User not found')
+            // console.log('User not found')
             return res.status(401).json({ message: 'User not found' })
         }
         if (userExists.teamId !== teamId) {
-            console.log('User does not match')
+            // console.log('User does not match')
             return res.status(401).json({ message: 'User does not match' });
         }
         // console.log('User Exists')

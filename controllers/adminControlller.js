@@ -50,11 +50,9 @@ const testAccessSave = async (req, res) => {
 const imageQuestion = async (req, res) => {
 
     const { eventName } = req.body;
-    console.log(req.body)
 
     try {
         const questions = await Questions.find({ event: eventName, questionType: "image", answer: null })
-        console.log(questions)
         return res.status(200).json({
             success: true, data: questions,
             message: questions.length > 0 ? "Image questions fetched successfully" : "No pending image questions found"
