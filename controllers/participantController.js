@@ -9,11 +9,11 @@ const QuestionModel = require('../models/Questions');
 
 const quizSave = async (req, res) => {
 
-    const { userId, scores, answers } = req.body;
+    const { teamId, scores, answers } = req.body;
 
     try {
-        await UserModel.findOneAndUpdate({ userId }, { scores }, { new: true });
-        await AnswerModel.findOneAndUpdate({ userId }, { answers }, { new: true, upsert: true });
+        await UserModel.findOneAndUpdate({ teamId }, { scores }, { new: true });
+        await AnswerModel.findOneAndUpdate({ teamId }, { answers }, { new: true, upsert: true });
         return res.status(200).json({ status: 200, message: 'Quiz saved successfully', score: scores });
     } catch (error) {
         console.error('Error in Saving Quiz : ', error.message);
@@ -27,7 +27,7 @@ const quizSave = async (req, res) => {
 
 const startRights = async (req, res) => {
 
-    const { userId } = req.body;
+    const { teamId } = req.body;
 
     try {
 
@@ -47,10 +47,10 @@ const startRights = async (req, res) => {
 
 const alreadyAttended = async (req, res) => {
 
-    const { userId } = req.body;
+    const { teamId } = req.body;
 
     try {
-        const alreadyExists = await AnswerModel.findOne({ userId }).select("_id");
+        const alreadyExists = await AnswerModel.findOne({ teamId }).select("_id");
         if (alreadyExists) {
             return res.status(200).json({ status: 200, message: "Permitted to start test", attended: true });
         }
@@ -62,10 +62,15 @@ const alreadyAttended = async (req, res) => {
 
 // --------------------------------------------------------------------------------------------------------------
 
+// Fetch Participants of Admin
+
 const fetchParticipants = async (req, res) => {
+    
+    const { event } = req.body
 
     try {
-        const allUsers = await UserModel.find();
+        const allUsers = await UserModel.find({event, role: 'PARTICIPANTS'});
+        // console.log(allUsers)
         return res.status(200).json(allUsers)
     } catch (error) {
         console.error('Error in fetching Report : ', error);
@@ -79,12 +84,12 @@ const fetchParticipants = async (req, res) => {
 
 const addUser = async (req, res) => {
 
-    const { userId, password, clgName, deptName, memberName1, memberName2, contactNo } = req.body;
+    const { teamId, password, clgName, deptName, contactNo, participants, role, event  } = req.body;
 
     try {
-        const userExists = await UserModel.findOne({ userId });
+        const userExists = await UserModel.findOne({ teamId });
         if (userExists) return res.status(401).json({ message: 'StaffId already Exist' })
-        const newUser = new UserModel({ userId, password, clgName, deptName, memberName1, memberName2, contactNo });
+        const newUser = new UserModel({ teamId, password, clgName, deptName,  participants, role, event, contactNo });
         await newUser.save();
         return res.status(201).json({ message: 'User created successfully' })
     } catch (error) {

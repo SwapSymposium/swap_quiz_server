@@ -7,9 +7,12 @@ const SettingModel = require('../models/Settings')
 
 const testAccessFetch = async (req, res) => {
 
+    const { event } = req.body;
+
     try {
-        const testPermission = await SettingModel.findOne({}, "allowTest")
-        return res.status(200).json({ status: 200, allowTest: testPermission.allowTest })
+        const testPermission = await SettingModel.findOne({ event })
+        // console.log(testPermission)
+        return res.status(200).json({ status: 200, allowTest: testPermission.allowTest, time: testPermission.time })
     } catch (error) {
         console.error('Error in fetching status access : ', error);
         return res.status(500).json({ message: 'Error in fetching status access' });
@@ -23,12 +26,11 @@ const testAccessFetch = async (req, res) => {
 
 const testAccessSave = async (req, res) => {
 
-    const { allowTest } = req.body;
+    const { allowTest, event, time } = req.body;
+    // console.log(req.body)
 
     try {
-        const testPermission = await SettingModel.findOneAndUpdate(
-            {}, { allowTest }, { new: true }
-        )
+        await SettingModel.findOneAndUpdate({ event }, { allowTest, time }, { new: true })
         return res.status(200).json({ status: 200, message: 'Settings Saved Sucessfully' })
     } catch (error) {
         console.error('Error in saving test access : ', error);
