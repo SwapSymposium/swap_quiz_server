@@ -9,12 +9,21 @@ const QuestionModel = require('../models/Questions');
 
 const quizSave = async (req, res) => {
 
-    const { teamId, scores, answers } = req.body;
+    const { teamId, scores, answers, event } = req.body;
 
     try {
-        await UserModel.findOneAndUpdate({ teamId }, { scores }, { new: true });
-        await AnswerModel.findOneAndUpdate({ teamId }, { answers }, { new: true, upsert: true });
-        return res.status(200).json({ status: 200, message: 'Quiz saved successfully', score: scores });
+        const updated = await AnswerModel.findOneAndUpdate(
+            { teamId: teamId, event },
+            { score: scores, answers },
+            { new: true, upsert: true }
+        )
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Quiz saved successfully',
+            score: updated.score
+        })
+
     } catch (error) {
         console.error('Error in Saving Quiz : ', error.message);
         return res.status(500).json({ message: 'Error saving quiz', error: error.message });
@@ -51,6 +60,7 @@ const alreadyAttended = async (req, res) => {
 
     try {
         const alreadyExists = await AnswerModel.findOne({ teamId }).select("_id");
+        console.log(alreadyExists)
         if (alreadyExists) {
             return res.status(200).json({ status: 200, message: "Permitted to start test", attended: true });
         }
@@ -107,7 +117,7 @@ const fetchQuestions = async (req, res) => {
 
     try {
         const questions = await QuestionModel.find({ event }).sort({ questionNo: 1 });
-        console.log(questions)
+        // console.log(questions)
         return res.status(200).json({ success: true, data: questions });
     } catch (error) {
         console.error('Error in Fetching Questions : ');
