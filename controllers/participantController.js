@@ -2,6 +2,7 @@ const UserModel = require('../models/User');
 const AnswerModel = require('../models/Answers');
 const SettingModel = require('../models/Settings');
 const QuestionModel = require('../models/Questions');
+const RulesModel = require('../models/Rules');
 
 // --------------------------------------------------------------------------------------------------------------
 
@@ -123,9 +124,27 @@ const fetchQuestions = async (req, res) => {
         console.error('Error in Fetching Questions : ');
         return res.status(500).json({ message: 'Internal Server Error' });
     }
-};
-
+}
 
 // --------------------------------------------------------------------------------------------------------------
 
-module.exports = { quizSave, startRights, alreadyAttended, fetchParticipants, addUser, fetchQuestions }
+// Fetch Rules for Quiz
+
+const fetchRules = async (req, res) => {
+
+    const { event } = req.body
+    console.log(req.body)
+
+    try {
+        const allRules = await RulesModel.find({ event });
+        console.log(allRules)
+        return res.status(200).json(allRules)
+    } catch (error) {
+        console.error('Error in fetching Rules : ', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------
+
+module.exports = { quizSave, startRights, alreadyAttended, fetchParticipants, addUser, fetchQuestions, fetchRules }
