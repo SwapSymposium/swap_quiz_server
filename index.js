@@ -6,6 +6,10 @@ dotenv.config();
 const mongoose = require('mongoose')
 const UserModel = require('./models/User')
 
+const path = require("path");
+
+
+
 // --------------------------------------------------------------------------------------------------------------
 
 const app = express();
@@ -61,3 +65,10 @@ app.listen(PORT, () => {
 // insertMember();
 
 // --------------------------------------------------------------------------------------------------------------
+
+
+//export the images as a static file 
+
+
+const uploadDir = path.join(process.cwd(), "uploads");
+app.use("/uploads", express.static(uploadDir));
