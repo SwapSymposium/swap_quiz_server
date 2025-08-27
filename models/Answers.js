@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const answersSchema = new mongoose.Schema({
     teamId: { type: String, required: true, unique: true },
     event: { type: String },
-    score: { type: Number },
+    scores: { type: Number },
     answers: { type: Map, of: String }
 }, { timestamps: true });
 

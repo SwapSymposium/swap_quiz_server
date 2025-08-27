@@ -5,10 +5,7 @@ const connectDB = require('./config/db');
 dotenv.config();
 const mongoose = require('mongoose')
 const UserModel = require('./models/User')
-
 const path = require("path");
-
-
 
 // --------------------------------------------------------------------------------------------------------------
 
@@ -44,7 +41,6 @@ app.use("/api/rules", rulesRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/users", usersRoutes);
 
-
 // --------------------------------------------------------------------------------------------------------------
 
 const PORT = process.env.PORT || 10000;
@@ -72,10 +68,6 @@ app.listen(PORT, () => {
 // insertMember();
 
 // --------------------------------------------------------------------------------------------------------------
-
-
-//export the images as a static file 
-
 
 const uploadDir = path.join(process.cwd(), "uploads");
 app.use("/uploads", express.static(uploadDir));

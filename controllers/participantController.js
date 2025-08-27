@@ -11,18 +11,21 @@ const RulesModel = require('../models/Rules');
 const quizSave = async (req, res) => {
 
     const { teamId, scores, answers, event } = req.body;
+    // console.log(req.body)
 
     try {
         const updated = await AnswerModel.findOneAndUpdate(
             { teamId: teamId, event },
-            { score: scores, answers },
+            { scores: scores, answers },
             { new: true, upsert: true }
         )
+
+        const inUser = await UserModel.findOneAndUpdate({ teamId, event }, { scores }, { new: true})
 
         return res.status(200).json({
             status: 200,
             message: 'Quiz saved successfully',
-            score: updated.score
+            scores: updated.scores
         })
 
     } catch (error) {
@@ -61,7 +64,7 @@ const alreadyAttended = async (req, res) => {
 
     try {
         const alreadyExists = await AnswerModel.findOne({ teamId }).select("_id");
-        console.log(alreadyExists)
+        // console.log(alreadyExists)
         if (alreadyExists) {
             return res.status(200).json({ status: 200, message: "Permitted to start test", attended: true });
         }
@@ -83,6 +86,26 @@ const fetchParticipants = async (req, res) => {
         const allUsers = await UserModel.find({ event, role: 'PARTICIPANTS' });
         // console.log(allUsers)
         return res.status(200).json(allUsers)
+    } catch (error) {
+        console.error('Error in fetching Report : ', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------
+
+// Fetch Question Time
+
+const fetchTime = async (req, res) => {
+
+    const { event } = req.body;
+    // console.log(req.body)
+
+    try {
+        const time = await SettingModel.findOne({ event });
+        const timeLimit = time.time
+        // console.log(timeLimit)
+        return res.status(200).json({timeLimit})
     } catch (error) {
         console.error('Error in fetching Report : ', error);
         return res.status(500).json({ message: 'Internal Server Error' });
@@ -137,7 +160,7 @@ const fetchRules = async (req, res) => {
 
     try {
         const allRules = await RulesModel.find({ event });
-        console.log(allRules)
+        // console.log(allRules)
         return res.status(200).json(allRules)
     } catch (error) {
         console.error('Error in fetching Rules : ', error);
@@ -147,4 +170,4 @@ const fetchRules = async (req, res) => {
 
 // --------------------------------------------------------------------------------------------------------------
 
-module.exports = { quizSave, startRights, alreadyAttended, fetchParticipants, addUser, fetchQuestions, fetchRules }
+module.exports = { quizSave, startRights, alreadyAttended, fetchParticipants, addUser, fetchQuestions, fetchTime, fetchRules }
