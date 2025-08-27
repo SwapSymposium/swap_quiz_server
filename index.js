@@ -22,6 +22,9 @@ const userRoutes = require('./routes/userRoutes');
 const participantsRoutes = require('./routes/participantsRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const rulesRoutes = require('./routes/fileUploadRoutes');
+const questionRoutes = require('./routes/fileUploadRoutes');
+const usersRoutes = require('./routes/fileUploadRoutes');
 
 // --------------------------------------------------------------------------------------------------------------
 
@@ -37,6 +40,10 @@ app.use('/api/user', userRoutes);
 app.use('/api/participants', participantsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/report', reportRoutes);
+app.use("/api/rules", rulesRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/users", usersRoutes);
+
 
 // --------------------------------------------------------------------------------------------------------------
 
