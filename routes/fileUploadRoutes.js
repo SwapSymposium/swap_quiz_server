@@ -12,39 +12,51 @@ const upload = multer({ storage });
 
 // Rules File
 
-const expectedHeaders = ["event", "title", "points", "subpoints[0]", "subpoints[1]", "subpoints[2]"];
-
 router.post("/uploadrules", upload.single("file"), async (req, res) => {
 
 	try {
 
 		if (!req.file) return res.status(400).send("No file uploaded");
+
 		const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
 		const sheetName = workbook.SheetNames[0];
 		const sheet = workbook.Sheets[sheetName];
 		const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
 
-		const uploadedHeaders = data[0].map(h => h?.toString().trim());
-		const isHeaderValid = JSON.stringify(uploadedHeaders) === JSON.stringify(expectedHeaders);
+		if (!data.length) return res.status(400).json({ error: "Excel is empty" });
 
-		if (!isHeaderValid) {
-			return res.status(400).json({ error: "Header mismatch", expected: expectedHeaders, got: uploadedHeaders });
+		const uploadedHeaders = data[0].map(h => h?.toString().trim());
+		const baseHeaders = ["event", "title", "points"];
+		const subpointHeaders = uploadedHeaders.slice(3);
+
+		const isBaseValid = JSON.stringify(uploadedHeaders.slice(0, 3)) === JSON.stringify(baseHeaders);
+		const areSubpointsValid = subpointHeaders.every(h => /^subpoints\[\d+\]$/.test(h));
+
+		if (!isBaseValid || !areSubpointsValid) {
+			return res.status(400).json({
+				error: "Header mismatch",
+				expected: "event, title, points, subpoints[n]",
+				got: uploadedHeaders
+			});
 		}
 
 		const rows = data.slice(1);
+		const rulesData = rows.map(row => {
+			const subpoints = row.slice(3).filter(Boolean);
+			return {
+				event: row[0] || "",
+				title: row[1] || "",
+				points: row[2] || "",
+				subpoints
+			};
+		});
 
-		const rulesData = rows.map(row => ({
-			event: row[0] || "",
-			title: row[1] || "",
-			points: row[2] || "",
-			subpoints: [row[3] || "", row[4] || "", row[5] || ""].filter(Boolean)
-		}));
-
+		if (!rulesData.length) return res.status(400).json({ error: "No data found" });
 		await Rule.insertMany(rulesData);
 		res.json({ message: "Rules uploaded successfully", count: rulesData.length });
 
 	} catch (err) {
-		console.error('Error in uploading Rules File : ',err);
+		console.error('Error uploading Rules file:', err);
 		res.status(500).send("Server Error");
 	}
 })
@@ -82,7 +94,7 @@ router.post("/uploadquestion", upload.single("file"), async (req, res) => {
 		res.json({ message: "Questions uploaded successfully", count: questions.length });
 
 	} catch (err) {
-		console.error('Error in uploading Question File : ',err);
+		console.error('Error in uploading Question File : ', err);
 		res.status(500).send("Error uploading questions");
 	}
 })
@@ -91,46 +103,66 @@ router.post("/uploadquestion", upload.single("file"), async (req, res) => {
 
 // Participants File Upload
 
-const userHeaders = ["event","teamId", "password", "role", "participants[0]", "participants[1]", "contactNo", "deptName", "clgName"];
+const userBaseHeaders = ["event", "teamId", "password", "role", "contactNo", "deptName", "clgName"];
 
 router.post("/uploadusers", upload.single("file"), async (req, res) => {
 
 	try {
 
 		if (!req.file) return res.status(400).send("No file uploaded");
+
 		const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
 		const sheetName = workbook.SheetNames[0];
 		const sheet = workbook.Sheets[sheetName];
 		const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
 
-		const uploadedHeaders = data[0].map(h => h?.toString().trim());
-		const isHeaderValid = JSON.stringify(uploadedHeaders) === JSON.stringify(userHeaders);
+		if (!data.length) return res.status(400).json({ error: "Excel is empty" });
 
-		if (!isHeaderValid) {
-			return res.status(400).json({ error: "Header mismatch", expected: userHeaders, got: uploadedHeaders });
+		const uploadedHeaders = data[0].map(h => h?.toString().trim());
+
+		const participantHeadersStart = 4;
+		const participantHeadersEnd = uploadedHeaders.length - userBaseHeaders.length + participantHeadersStart;
+
+		const participantHeaders = uploadedHeaders.slice(participantHeadersStart, participantHeadersEnd);
+		const otherHeaders = [
+			...uploadedHeaders.slice(0, participantHeadersStart),
+			...uploadedHeaders.slice(participantHeadersEnd)
+		];
+
+		const areParticipantHeadersValid = participantHeaders.every(h => /^participants\[\d+\]$/.test(h));
+		const areOtherHeadersValid = JSON.stringify(otherHeaders) === JSON.stringify(userBaseHeaders);
+
+		if (!areParticipantHeadersValid || !areOtherHeadersValid) {
+			return res.status(400).json({
+				error: "Header mismatch",
+				expected: "event, teamId, password, role, participants[n], contactNo, deptName, clgName",
+				got: uploadedHeaders
+			});
 		}
 
 		const rows = data.slice(1);
 
-		const userData = rows.map(row => ({
-			event: row[0] || "",
-			teamId: row[1] || "",
-			password: row[2] || "",
-			role: row[3] || "",
-			participants: [row[4] || "", row[5] || ""],
-			contactNo: row[6] || "",
-			deptName: row[7] || "",
-			clgName: row[8] || "",
-		}))
+		const userData = rows.map(row => {
+			const participants = row.slice(participantHeadersStart, participantHeadersEnd).filter(Boolean);
+			return {
+				event: row[0] || "", teamId: row[1] || "",
+				password: row[2] || "", role: row[3] || "",
+				participants,
+				contactNo: row[participantHeadersEnd] || "",
+				deptName: row[participantHeadersEnd + 1] || "",
+				clgName: row[participantHeadersEnd + 2] || "",
+			};
+		});
 
 		await User.insertMany(userData);
-		res.json({ message: "User uploaded successfully", count: userData.length });
+		res.json({ message: "Users uploaded successfully", count: userData.length });
 
 	} catch (err) {
-		console.error('Error in uploading Users File : ',err);
+		console.error('Error in uploading Users file:', err);
 		res.status(500).send("Server Error");
 	}
-})
+});
+
 
 // --------------------------------------------------------------------------------------------------------------
 
