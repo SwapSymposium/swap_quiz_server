@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+    swapId: { type: String, required: true },
     teamId: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['SUPERADMIN', 'ADMIN', 'PARTICIPANTS'], required: true},
+    role: { type: String, enum: ['SUPERADMIN', 'ADMIN', 'PARTICIPANTS'], required: true },
     event: { type: String },
     participants: [String],
     contactNo: { type: String },

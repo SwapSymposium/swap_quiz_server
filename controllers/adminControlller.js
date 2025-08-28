@@ -152,7 +152,7 @@ const addEvent = async (req, res) => {
         }
 
         const newEvent = new UserModel({
-            teamId, password, role: "ADMIN", event: eventName,
+            teamId, password, role: "ADMIN", event: eventName, swapId: 'JMC',
             participants: [], contactNo: contactNo || "1234567890",
             deptName: deptName || "JMC", clgName: clgName || "JMC", scores: 0
         })

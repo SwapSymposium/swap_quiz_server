@@ -103,7 +103,7 @@ router.post("/uploadquestion", upload.single("file"), async (req, res) => {
 
 // Participants File Upload
 
-const userBaseHeaders = ["event", "teamId", "password", "role", "contactNo", "deptName", "clgName"];
+const userBaseHeaders = ["swapId", "event", "teamId", "password", "role", "contactNo", "deptName", "clgName"];
 
 router.post("/uploadusers", upload.single("file"), async (req, res) => {
 
@@ -120,7 +120,7 @@ router.post("/uploadusers", upload.single("file"), async (req, res) => {
 
 		const uploadedHeaders = data[0].map(h => h?.toString().trim());
 
-		const participantHeadersStart = 4;
+		const participantHeadersStart = 5;
 		const participantHeadersEnd = uploadedHeaders.length - userBaseHeaders.length + participantHeadersStart;
 
 		const participantHeaders = uploadedHeaders.slice(participantHeadersStart, participantHeadersEnd);
@@ -135,7 +135,7 @@ router.post("/uploadusers", upload.single("file"), async (req, res) => {
 		if (!areParticipantHeadersValid || !areOtherHeadersValid) {
 			return res.status(400).json({
 				error: "Header mismatch",
-				expected: "event, teamId, password, role, participants[n], contactNo, deptName, clgName",
+				expected: "swapId, event, teamId, password, role, participants[n], contactNo, deptName, clgName",
 				got: uploadedHeaders
 			});
 		}
@@ -145,8 +145,8 @@ router.post("/uploadusers", upload.single("file"), async (req, res) => {
 		const userData = rows.map(row => {
 			const participants = row.slice(participantHeadersStart, participantHeadersEnd).filter(Boolean);
 			return {
-				event: row[0] || "", teamId: row[1] || "",
-				password: row[2] || "", role: row[3] || "",
+				swapId:row[0], event: row[1] || "", teamId: row[2] || "",
+				password: row[3] || "", role: row[4] || "",
 				participants,
 				contactNo: row[participantHeadersEnd] || "",
 				deptName: row[participantHeadersEnd + 1] || "",
