@@ -26,16 +26,16 @@ router.post("/uploadrules", upload.single("file"), async (req, res) => {
 		if (!data.length) return res.status(400).json({ error: "Excel is empty" });
 
 		const uploadedHeaders = data[0].map(h => h?.toString().trim());
-		const baseHeaders = ["event", "title", "points"];
-		const subpointHeaders = uploadedHeaders.slice(3);
+		const baseHeaders = ["event", "points"];
+		const subpointHeaders = uploadedHeaders.slice(2);
 
-		const isBaseValid = JSON.stringify(uploadedHeaders.slice(0, 3)) === JSON.stringify(baseHeaders);
+		const isBaseValid = JSON.stringify(uploadedHeaders.slice(0, 2)) === JSON.stringify(baseHeaders);
 		const areSubpointsValid = subpointHeaders.every(h => /^subpoints\[\d+\]$/.test(h));
 
 		if (!isBaseValid || !areSubpointsValid) {
 			return res.status(400).json({
 				error: "Header mismatch",
-				expected: "event, title, points, subpoints[n]",
+				expected: "event, points, subpoints[n]",
 				got: uploadedHeaders
 			});
 		}
@@ -45,8 +45,7 @@ router.post("/uploadrules", upload.single("file"), async (req, res) => {
 			const subpoints = row.slice(3).filter(Boolean);
 			return {
 				event: row[0] || "",
-				title: row[1] || "",
-				points: row[2] || "",
+				points: row[1] || "",
 				subpoints
 			};
 		});
@@ -145,7 +144,7 @@ router.post("/uploadusers", upload.single("file"), async (req, res) => {
 		const userData = rows.map(row => {
 			const participants = row.slice(participantHeadersStart, participantHeadersEnd).filter(Boolean);
 			return {
-				swapId:row[0], event: row[1] || "", teamId: row[2] || "",
+				swapId: row[0], event: row[1] || "", teamId: row[2] || "",
 				password: row[3] || "", role: row[4] || "",
 				participants,
 				contactNo: row[participantHeadersEnd] || "",

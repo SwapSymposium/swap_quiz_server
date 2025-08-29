@@ -20,7 +20,7 @@ const quizSave = async (req, res) => {
             { new: true, upsert: true }
         )
 
-        const inUser = await UserModel.findOneAndUpdate({ teamId, event }, { scores }, { new: true})
+        const inUser = await UserModel.findOneAndUpdate({ teamId, event }, { scores }, { new: true })
 
         return res.status(200).json({
             status: 200,
@@ -105,7 +105,7 @@ const fetchTime = async (req, res) => {
         const time = await SettingModel.findOne({ event });
         const timeLimit = time.time
         // console.log(timeLimit)
-        return res.status(200).json({timeLimit})
+        return res.status(200).json({ timeLimit })
     } catch (error) {
         console.error('Error in fetching Report : ', error);
         return res.status(500).json({ message: 'Internal Server Error' });
@@ -118,12 +118,13 @@ const fetchTime = async (req, res) => {
 
 const addUser = async (req, res) => {
 
-    const { teamId, password, clgName, deptName, contactNo, participants, role, event } = req.body;
+    const { teamId, password, clgName, deptName, contactNo, participants, role, event, swapId } = req.body;
+    // console.log(req.body)
 
     try {
         const userExists = await UserModel.findOne({ teamId });
         if (userExists) return res.status(401).json({ message: 'StaffId already Exist' })
-        const newUser = new UserModel({ teamId, password, clgName, deptName, participants, role, event, contactNo });
+        const newUser = new UserModel({ teamId, password, clgName, deptName, participants, role, swapId, event, contactNo });
         await newUser.save();
         return res.status(201).json({ message: 'User created successfully' })
     } catch (error) {
@@ -156,7 +157,7 @@ const fetchQuestions = async (req, res) => {
 const fetchRules = async (req, res) => {
 
     const { event } = req.body
-    console.log(req.body)
+    // console.log(req.body)
 
     try {
         const allRules = await RulesModel.find({ event });
