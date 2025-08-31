@@ -156,13 +156,13 @@ const fetchQuestions = async (req, res) => {
 
 const fetchRules = async (req, res) => {
 
-    const { event } = req.body
-    // console.log(req.body)
+    const { event, teamId } = req.body
 
     try {
         const allRules = await RulesModel.find({ event });
-        // console.log(allRules)
-        return res.status(200).json(allRules)
+        const user = await UserModel.findOne({ teamId }).select('participants -_id').lean();
+        // console.log(user)
+        return res.status(200).json({ rules: allRules, participants: user.participants })
     } catch (error) {
         console.error('Error in fetching Rules : ', error);
         return res.status(500).json({ message: 'Internal Server Error' });

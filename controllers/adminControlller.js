@@ -1,6 +1,8 @@
 const UserModel = require('../models/User')
 const SettingModel = require('../models/Settings')
-const Questions = require('../models/Questions')
+const QuestionModel = require('../models/Questions')
+const AnswerModel = require('../models/Answers')
+const RulesModel = require('../models/Rules')
 const { response } = require('express')
 const path = require("path");
 const fs = require("fs");
@@ -52,7 +54,7 @@ const imageQuestion = async (req, res) => {
     const { eventName } = req.body;
 
     try {
-        const questions = await Questions.find({ event: eventName, questionType: "image", answer: null })
+        const questions = await QuestionModel.find({ event: eventName, questionType: "image", answer: null })
         return res.status(200).json({
             success: true, data: questions,
             message: questions.length > 0 ? "Image questions fetched successfully" : "No pending image questions found"
@@ -100,7 +102,7 @@ const imageUpload = async (req, res) => {
         }
 
         const ansFile = options[ansIndex];
-        const questionDoc = await Questions.findOneAndUpdate(
+        const questionDoc = await QuestionModel.findOneAndUpdate(
             { event, questionNo },
             { $set: { options, answer: ansFile } },
             { new: true, upsert: true }
@@ -112,7 +114,6 @@ const imageUpload = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 }
-
 
 // --------------------------------------------------------------------------------------------------------------
 
@@ -161,9 +162,9 @@ const addEvent = async (req, res) => {
             event: eventName, allowTest: false, time: 45,
         })
 
-        await newEvent.save();  await eventSetting.save();
+        await newEvent.save(); await eventSetting.save();
 
-        return res.status(201).json({  success: true, message: "Event added successfully", data: newEvent })
+        return res.status(201).json({ success: true, message: "Event added successfully", data: newEvent })
 
     } catch (error) {
         console.error("Error in addEvent:", error);
@@ -173,4 +174,85 @@ const addEvent = async (req, res) => {
 
 // --------------------------------------------------------------------------------------------------------------
 
-module.exports = { testAccessSave, testAccessFetch, imageQuestion, imageUpload, upload, getEvents, addEvent }
+// Edit Event
+
+const editUser = async (req, res) => {
+
+    const { teamId, event, password, contactNo } = req.body;
+
+    try {
+        const user = await UserModel.findOneAndUpdate(
+            { teamId }, { event, password, contactNo }, { new: true }
+        )
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.status(200).json({ message: 'User updated successfully' })
+    } catch (error) {
+        console.error("Error in addEvent:", error);
+        return res.status(500).json({ success: false, message: "Server Error" });
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------
+
+// Delete Event
+
+const deleteUser = async (req, res) => {
+
+    const { event } = req.body;
+
+    try {
+        const users = await UserModel.deleteMany({ event });
+        const settings = await SettingModel.deleteMany({ event });
+        const questions = await QuestionModel.deleteMany({ event });
+        const answers = await AnswerModel.deleteMany({ event });
+        const rules = await RulesModel.deleteMany({ event });
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Error deleting user' });
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------
+
+// Fetch Participants of Admin
+
+const fetchEvents = async (req, res) => {
+
+    try {
+        const allEvents = await UserModel.find({ role: 'ADMIN' });
+        // console.log(allEvents)
+        return res.status(200).json(allEvents)
+    } catch (error) {
+        console.error('Error in fetching Report : ', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------
+
+// Delete Event
+
+const dataDeletion = async (req, res) => {
+
+    const { event, tableName } = req.body;
+    // console.log(req.body)
+
+    try {
+        let result;
+        if (tableName === 'Participants') { result = await UserModel.deleteMany({ event, role: 'PARTICIPANTS' }) } 
+        else if (tableName === 'Rules') { result = await RulesModel.deleteMany({ event }) } 
+        else if (tableName === 'Answers') { result = await AnswerModel.deleteMany({ event }) } 
+        else if (tableName === 'Questions') {  result = await QuestionModel.deleteMany({ event }) } 
+        else { return res.status(400).json({ message: "Invalid table name" }) }
+        res.status(200).json({ message: `${tableName} deleted successfully`, deletedCount: result.deletedCount });
+    
+    } catch (error) {
+        console.error('Error in Deleting Data : ', error);
+        res.status(500).json({ message: 'Error deleting data' });
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------
+
+module.exports = { testAccessSave, dataDeletion, testAccessFetch, fetchEvents, imageQuestion, deleteUser, imageUpload, upload, editUser, getEvents, addEvent }
