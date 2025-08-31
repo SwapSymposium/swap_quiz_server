@@ -42,7 +42,7 @@ router.post("/uploadrules", upload.single("file"), async (req, res) => {
 
 		const rows = data.slice(1);
 		const rulesData = rows.map(row => {
-			const subpoints = row.slice(3).filter(Boolean);
+			const subpoints = row.slice(2).filter(Boolean);
 			return {
 				event: row[0] || "",
 				points: row[1] || "",
