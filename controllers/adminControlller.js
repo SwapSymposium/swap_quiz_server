@@ -240,13 +240,16 @@ const dataDeletion = async (req, res) => {
 
     try {
         let result;
-        if (tableName === 'Participants') { result = await UserModel.deleteMany({ event, role: 'PARTICIPANTS' }) } 
-        else if (tableName === 'Rules') { result = await RulesModel.deleteMany({ event }) } 
-        else if (tableName === 'Answers') { result = await AnswerModel.deleteMany({ event }) } 
-        else if (tableName === 'Questions') {  result = await QuestionModel.deleteMany({ event }) } 
+        if (tableName === 'Participants') { result = await UserModel.deleteMany({ event, role: 'PARTICIPANTS' }) }
+        else if (tableName === 'Rules') { result = await RulesModel.deleteMany({ event }) }
+        else if (tableName === 'Answers') {
+            result = await AnswerModel.deleteMany({ event });
+            await UserModel.updateMany({ event, role: 'PARTICIPANTS' }, { $set: { scores: 0 } })
+        }
+        else if (tableName === 'Questions') { result = await QuestionModel.deleteMany({ event }) }
         else { return res.status(400).json({ message: "Invalid table name" }) }
         res.status(200).json({ message: `${tableName} deleted successfully`, deletedCount: result.deletedCount });
-    
+
     } catch (error) {
         console.error('Error in Deleting Data : ', error);
         res.status(500).json({ message: 'Error deleting data' });
